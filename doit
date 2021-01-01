@@ -1,0 +1,137 @@
+#numpy basis
+import numpy as np
+print(np.__version__)
+import numpy as np
+my_arr=np.array([[10,20,30],[40,50,60]])
+print(my_arr[1][2])
+my_arr
+type(my_arr)
+print(np.sum(my_arr))
+np.sum(my_arr[1])
+#matplot basis
+import matplotlib.pyplot as plt
+#plot([x],[y])
+plt.plot([1,2,3,4,5],[1,4,9,16,25])
+plt.show() #plot으로 전달하고 show로 출력
+plt.scatter([1,2,3,4,5],[1,4,9,16,25])
+plt.scatter([1,2,3,4,5],[1,4,9,16,25])
+plt.show()# plt.show()는 그래프를 조금 더 깔끔하게 그려준다!
+x=np.random.randn(1000)#원소가 1000개인 numpy배열이다.
+y=np.random.randn(1000)
+plt.scatter(x,y)
+plt.show()
+#sklearn에서 당뇨병 data불러와서 diabate라는 변수에 저장.
+from sklearn.datasets import load_diabetes
+diabetes=load_diabetes()
+print(diabetes.data.shape,diabetes.target.shape)
+# 442명의 사람(샘플)의 10개의 특성 
+print(diabetes.data)
+print(diabetes.target)
+diabetes.data[0:3]
+import matplotlib.pyplot as plt
+plt.scatter(diabetes.data[:,2],diabetes.target)
+plt.xlabel('third features')
+plt.ylabel('target')
+plt.show()
+#훈련 데이터 준비하기
+#매번 긴 이름 쓰기 번거로우니 변수이름 지정
+x=diabetes.data[:,2]
+y=diabetes.target
+#w,b 실제로 찾아보기
+w=1.0
+b=1.0
+#예측치
+y_h=x[0]*w+b
+print(y_h)
+
+#target data
+print(y[0])
+#w의 방향성 찾기
+w_inc=w+0.1
+y_h_inc=x[0]*w_inc+b
+print(y_h_inc)
+#w변화에 따른 예측값 변화율
+w_rate=(y_h_inc-y_h)/(w_inc-w)
+print(w_rate)
+#원하는 target에 맞게 w를 수정하는 방법은 w에 변화율을 더해가는 것이다.
+w_new=w+w_rate
+print(w_new)
+#bias 조절
+b_inc=b+0.1
+y_h_inc=x[0]*w+b_inc
+y_h_inc
+b_rate=(y_h_inc-y_h)/(b_inc-b)
+b_rate
+#절편이니 당연히 b변화량= y^변화량
+b_new=b+1
+b_new
+err=y[0]-y_h
+w_new=w+w_rate*err
+b_new=b+1*err
+print(w_new,b_new)
+#두번째 sample
+y_h=x[1]*w_new+b_new
+err=y[1]-y_h
+w_rate=x[1]
+w_new=w_new+w_rate*err
+b_new=b_new+err
+(w_new,b_new)
+#전체 sample 반복
+
+for x_i,y_i in zip(x,y):
+  
+    y_h=x_i*w+b
+    err=y_i-y_h
+    w_rate=x_i
+    w=w+w_rate*err
+    b=b+1*err
+print(w,b)
+plt.scatter(x,y)
+pt1=(-0.1,-0.1*w+b)
+pt2=(0.15,0.15*w+b)
+plt.plot([pt1[0],pt2[0]],[pt1[1],pt2[1]])
+plt.show()
+#epoch=100(모든 데이터에 대한 경사하강법 시행의 단위:epoch)
+for i in range(1,100):
+    for x_i,y_i in zip(x,y):
+        y_h=x_i*w+b
+        err=y_i-y_h
+        w_rate=x_i
+        w=w+w_rate*err
+        b=b+1*err
+print(w,b)
+x_new=0.18
+y_pred=x_new*w+b
+print(y_pred)
+plt.scatter(x,y)
+plt.scatter(x_new,y_pred)
+plt.show()
+class Neuron:
+    
+    def __init__(self):
+        self.w=1.0
+        self.b=1.0
+    def forpass(self,x):
+        y_hat=x*self.w+self.b
+        return y_hat
+    def backprop(self,x,err):
+        w_grad=x*err
+        b_grad=1*err
+        return w_grad,b_grad
+    def fit(self,x,y,epochs=100):
+        for i in range(epochs):
+            for x_i,y_i in zip(x,y):
+                y_hat=self.forpass(x_i)
+                err=-(y_i-y_hat)
+                w_grad,b_grad=self.backprop(x_i,err)
+                self.w-=w_grad
+                self.b-=b_grad
+a=Neuron()
+a.fit(x,y)
+plt.scatter(x,y)
+pt1=(-0.1,-0.1*a.w+a.b)
+pt2=(0.15,0.15*a.w+a.b)
+plt.plot([pt1[0],pt2[0]],[pt1[1],pt2[1]])
+plt.xlabel('x')
+plt.ylabel('y')
+plt.show()
