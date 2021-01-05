@@ -1,0 +1,338 @@
+#chapter.5
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+cancer=load_breast_cancer()
+x=cancer.data
+y=cancer.target
+x_train_all, x_test, y_train_all, y_test=train_test_split(x,y,stratify=y,test_size=0.2,random_state=42)
+
+from sklearn.linear_model import SGDClassifier
+sgd=SGDClassifier(loss='log',random_state=42)
+sgd.fit(x_train_all,y_train_all)
+sgd.score(x_test, y_test)
+
+from sklearn.linear_model import SGDClassifier
+sgd=SGDClassifier(loss='hinge',random_state=42)
+sgd.fit(x_train_all,y_train_all)
+sgd.score(x_test, y_test)
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+cancer=load_breast_cancer()
+x=cancer.data
+y=cancer.target
+x_train_all, x_test, y_train_all, y_test=train_test_split(x,y,stratify=y,test_size=0.2,random_state=42)
+x_train, x_val,y_train,y_val=train_test_split(x_train_all,y_train_all,stratify=y_train_all,test_size=0.2,random_state=42)
+print(x_train.shape,x_val.shape)
+
+sgd=SGDClassifier(loss='log',random_state=42)
+sgd.fit(x_train, y_train)
+sgd.score(x_val, y_val)
+
+import matplotlib.pyplot as plt
+import numpy as np
+print(cancer.feature_names[[2,3]])
+plt.boxplot(x_train[:,2:4])
+plt.xlabel('feature')
+plt.ylabel('value')
+plt.show()
+
+class singleLayer:
+    
+    def __init__(self,learning_rate=0.1):
+        self.w=None
+        self.b=None
+        self.losses=[]
+        self.w_history=[]
+        self.lr=learning_rate
+    def forpass(self,x): #넣어주는 x는 array이다.
+        z=np.sum(x*self.w)+self.b
+        return z
+    def backprop(self,x,err):
+        w_grad=x*err
+        b_grad=1*err
+        return w_grad, b_grad 
+    def activation(self,z):
+        a=1/(1+np.exp(-z))
+        return a
+    def fit(self,x,y,epochs=100):
+        self.w=np.ones(x.shape[1])
+        self.b=0
+        for i in range(epochs):
+            loss=0
+            indexes=np.random.permutation(np.arange(len(x)))
+            for i in indexes:
+                z=self.forpass(x[i])
+                a=self.activation(z)
+                err=-(y[i]-a)
+                w_grad,b_grad=self.backprop(x[i],err)
+                self.w-=w_grad*self.lr
+                self.b-=b_grad
+                self.w_history.append(self.w.copy())
+                a=np.clip(a,1e-10,1-1e-10)
+                loss+=-(y[i]*np.log(a)+(1-y[i])*np.log(1-a))
+            self.losses.append(loss/len(y))         
+    def predict(self,x):
+        z=[self.forpass(x_i) for x_i in x]
+        return np.array(z)>0
+    def score(self,x,y):
+        return np.mean(self.predict(x)==y)
+
+layer1=singleLayer()
+layer1.fit(x_train, y_train)
+layer1.score(x_val, y_val)
+
+w2=[]
+w3=[]
+for w in layer1.w_history:
+    w2.append(w[2])
+    w3.append(w[3])
+plt.plot(w2,w3)
+plt.plot(w2[-1],w3[-1],'ro')
+plt.show()
+
+x=([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])
+xs=np.array(x)
+print(np.mean(xs))
+print(np.mean(xs,axis=0))
+print(np.std(xs))
+print(np.std(xs,axis=0))
+
+train_mean=np.mean(x_train,axis=0)
+train_std=np.std(x_train, axis=0)
+x_train_scaled=(x_train-train_mean)/train_std
+x_train_scaled
+
+layer2=singleLayer()
+layer2.fit(x_train_scaled, y_train)
+w2=[]
+w3=[]
+for w in layer2.w_history:
+    w2.append(w[2])
+    w3.append(w[3])
+plt.plot(w2,w3)
+plt.plot(w2[-1],w3[-1],'ro')
+plt.show()
+layer2.score(x_val, y_val)
+val_mean=np.mean(x_val, axis=0)
+val_std=np.std(x_val, axis=0)
+x_val_scaled=(x_val-val_mean)/val_std
+layer2.score(x_val_scaled,y_val)
+plt.plot(x_train[:50,0],x_train[:50,1],'bo')
+plt.plot(x_val[:50,0],x_val[:50,1],'ro')
+plt.legend(['train_set','val_set'])
+plt.show()
+x_val_scaled=(x_val-train_mean)/train_std
+plt.plot(x_train_scaled[:50,0], x_train_scaled[:50,1],'bo')
+plt.plot(x_val_scaled[:50,0],x_val_scaled[:50,1],'ro')
+plt.legend(['train_set','val_set'])
+plt.show()
+layer2.score(x_val_scaled, y_val)
+
+class singleLayer:
+    
+    def __init__(self,learning_rate=0.1):
+        self.w=None
+        self.b=None
+        self.losses=[]
+        self.val_losses=[]
+        self.w_history=[]
+        self.lr=learning_rate
+    def forpass(self,x): #넣어주는 x는 array이다.
+        z=np.sum(x*self.w)+self.b
+        return z
+    def backprop(self,x,err):
+        w_grad=x*err
+        b_grad=1*err
+        return w_grad, b_grad 
+    def activation(self,z):
+        a=1/(1+np.exp(-z))
+        return a
+    def fit(self,x,y,epochs=100,x_val=None, y_val=None):
+        self.w=np.ones(x.shape[1])
+        self.b=0
+        for i in range(epochs):
+            loss=0
+            indexes=np.random.permutation(np.arange(len(x)))
+            for i in indexes:
+                z=self.forpass(x[i])
+                a=self.activation(z)
+                err=-(y[i]-a)
+                w_grad,b_grad=self.backprop(x[i],err)
+                self.w-=w_grad*self.lr
+                self.b-=b_grad
+                self.w_history.append(self.w.copy())
+                a=np.clip(a,1e-10,1-1e-10)
+                loss+=-(y[i]*np.log(a)+(1-y[i])*np.log(1-a))
+            self.losses.append(loss/len(y))  
+            self.update_val_loss(x_val,y_val)
+    def predict(self,x):
+        z=[self.forpass(x_i) for x_i in x]
+        return np.array(z)>0
+    def score(self,x,y):
+        return np.mean(self.predict(x)==y)
+    def update_val_loss(self,x_val,y_val):
+        if x_val is None:
+            return
+        val_loss=0
+        for i in range(len(x_val)):
+            z=self.forpass(x_val[i])
+            a=self.activation(z)
+            a=np.clip(a,1e-10,1-1e-10)
+            val_loss+=-(y_val[i]*np.log(a)+(1-y_val[i])*np.log(1-a))
+        self.val_losses.append(val_loss/len(y_val))
+
+layer3=singleLayer()
+layer3.fit(x_train_scaled,y_train,x_val=x_val_scaled,y_val=y_val)
+
+plt.ylim(0,0.3)
+plt.plot(layer3.losses)
+plt.plot(layer3.val_losses)
+plt.legend(['train_loss','val_loss'])
+plt.show()
+
+layer4=singleLayer()
+layer4.fit(x_train_scaled,y_train,epochs=20)
+layer4.score(x_val_scaled,y_val)
+
+class singleLayer:
+    
+    def __init__(self,learning_rate=0.1,l1=0,l2=0):
+        self.w=None
+        self.b=None
+        self.losses=[]
+        self.val_losses=[]
+        self.w_history=[]
+        self.lr=learning_rate
+        self.l1=l1
+        self.l2=l2
+    def forpass(self,x): #넣어주는 x는 array이다.
+        z=np.sum(x*self.w)+self.b
+        return z
+    def backprop(self,x,err):
+        w_grad=x*err
+        b_grad=1*err
+        return w_grad, b_grad 
+    def activation(self,z):
+        a=1/(1+np.exp(-z))
+        return a
+    def fit(self,x,y,epochs=100,x_val=None, y_val=None):
+        self.w=np.ones(x.shape[1])
+        self.b=0
+        for i in range(epochs):
+            loss=0
+            indexes=np.random.permutation(np.arange(len(x)))
+            for i in indexes:
+                z=self.forpass(x[i])
+                a=self.activation(z)
+                err=-(y[i]-a)
+                w_grad,b_grad=self.backprop(x[i],err)
+                w_grad+=self.l1*np.sign(self.w)+self.l2*self.w
+                self.w-=w_grad*self.lr
+                self.b-=b_grad
+                self.w_history.append(self.w.copy())
+                a=np.clip(a,1e-10,1-1e-10)
+                loss+=-(y[i]*np.log(a)+(1-y[i])*np.log(1-a))
+            self.losses.append(loss/len(y)+self.reg_loss())  
+            self.update_val_loss(x_val,y_val)
+    def predict(self,x):
+        z=[self.forpass(x_i) for x_i in x]
+        return np.array(z)>0
+    def score(self,x,y):
+        return np.mean(self.predict(x)==y)
+    def reg_loss(self):
+        return self.l1*np.sum(np.abs(self.w))+self.l2/2*np.sum(self.w**2)
+    def update_val_loss(self,x_val,y_val):
+        if x_val is None:
+            return
+        val_loss=0
+        for i in range(len(x_val)):
+            z=self.forpass(x_val[i])
+            a=self.activation(z)
+            a=np.clip(a,1e-10,1-1e-10)
+            val_loss+=-(y_val[i]*np.log(a)+(1-y_val[i])*np.log(1-a))
+        self.val_losses.append(val_loss/len(y_val)+self.reg_loss())
+
+l1_list=[0.0001,0.001,0.01]
+for l1 in l1_list:
+    lyr=singleLayer(l1=l1)
+    lyr.fit(x_train_scaled,y_train,x_val=x_val_scaled,y_val=y_val)
+    
+    plt.plot(lyr.losses)
+    plt.plot(lyr.val_losses)
+    plt.title("Learning curve".format(l1))
+    plt.legend(['train_loss','val_loss'])
+    plt.ylim(0,0.3)
+    plt.show()
+    
+    plt.plot(lyr.w,'bo')
+    plt.title("Weight".format(l1))
+    plt.ylim(-4,4)
+    plt.show()
+
+layer5=singleLayer(l1=0.001)
+layer5.fit(x_train_scaled,y_train,epochs=20)
+layer5.score(x_val_scaled,y_val)
+
+l2_list=[0.0001,0.001,0.01]
+for l2 in l2_list:
+    lyr=singleLayer(l2=l2)
+    lyr.fit(x_train_scaled,y_train,x_val=x_val_scaled,y_val=y_val)
+    
+    plt.plot(lyr.losses)
+    plt.plot(lyr.val_losses)
+    plt.title("Learning curve".format(l1))
+    plt.legend(['train_loss','val_loss'])
+    plt.ylim(0,0.3)
+    plt.show()
+    
+    plt.plot(lyr.w,'bo')
+    plt.title("Weight".format(l1))
+    plt.ylim(-4,4)
+    plt.show()
+
+layer6=singleLayer(l2=0.01)
+layer6.fit(x_train_scaled,y_train,epochs=20)
+layer6.score(x_val_scaled,y_val)
+
+np.sum(layer6.predict(x_val_scaled)==y_val)
+
+sgd=SGDClassifier(loss='log',penalty='l2',alpha=0.001,random_state=42)
+sgd.fit(x_train_scaled, y_train)
+sgd.score(x_val_scaled, y_val)
+
+validation_scores=[]
+k=10
+bins=len(x_train_all)//k
+for i in range(k):
+    start=i*bins
+    end=(i+1)*bins
+    val_fold=x_train_all[start:end]
+    val_target=y_train_all[start:end]
+    
+    train_index=list(range(0,start))+list(range(end,len(x_train_all)))
+    train_fold=x_train_all[train_index]
+    train_target=y_train_all[train_index]
+    
+    train_mean=np.mean(train_fold,axis=0)
+    train_std=np.std(train_fold,axis=0)
+    train_fold_scaled=(train_fold-train_mean)/train_std
+    val_fold_scaled=(val_fold-train_mean)/train_std
+    
+    lyr=singleLayer(l2=0.01)
+    lyr.fit(train_fold_scaled,train_target,epochs=50)
+    score=lyr.score(val_fold_scaled,val_target)
+    validation_scores.append(score)
+print(np.mean(validation_scores))
+
+from sklearn.model_selection import cross_validate
+sgd=SGDClassifier(loss='log',penalty='l2',alpha=0.001,random_state=42)
+scores=cross_validate(sgd,x_train_all,y_train_all,cv=10)
+print(np.mean(scores['test_score']))
+
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+pipe=make_pipeline(StandardScaler(),sgd)
+scores=cross_validate(pipe,x_train_all,y_train_all,cv=10,return_train_score=True)
+print(np.mean(scores['test_score']))
+print(np.mean(scores['train_score']))
