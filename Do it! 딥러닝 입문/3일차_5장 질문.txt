@@ -1,0 +1,17 @@
+1. 122쪽에 cancer.feature_names의 2번째, 3번째, 4번째 원소를 출력하시오.
+cancer.feature_names[1:4], or cancer.feature_names[[1,2,3]]
+2. cancer.feature_names의 타입은 numpy.ndarray이다. 하지만 cancer.feature_names[:,1]은 에러가 난다. 왜인지 설명하시오.
+cancer.feature_names는 1차원 행렬이기 때문이다.
+3. epoch의 횟수가 무조건 큰 게 좋지 않은 이유를 설명하시오.
+검증 세트의 손실이 에프코이 횟수가 최적점을 지나면 오히려 상승하기 때문이다.
+4. 모델 복잡도의 정의를 쓰시오.
+모델이 가진 학습 가능한 가중치 개수
+5. 편향을 줄인다가 의미하는 것은?
+훈련 세트의 성능을 높인다
+6. 분산이 커진다가 의미하는 것은?
+검증 세트와 성능 차이가 커진다.
+7. l2 규제가 l1 규제보다 좋은 이유
+l1 규제는 가중치의 크기에 따라 규제의 양이 변하지 않고, 일부 가중치를 0으로 만들어 모델 복잡도를 떨어뜨린다.
+8. Pipeline 클래스를 사용하는 이유
+전처리 단계에서 검증 폴드가 누설되지 않게 해준다.(?)
+https://docs.google.com/forms/d/e/1FAIpQLScv3k7hvwfBmy8kFnC01H8eqotXBPytykwk4NrXVZKsiEUwOA/viewform
